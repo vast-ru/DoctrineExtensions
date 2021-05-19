@@ -431,7 +431,23 @@ class UploadableEntityTest extends BaseTestCaseORM
         $this->assertFalse($this->listener->removeFile('non_existent_file'));
     }
 
-    public function test_moveFile_usingAppendNumberOptionAppendsNumberToFilenameIfItAlreadyExists()
+    public function dataProvider_usingAppendNumberOptionAppendsNumberToFilenameIfItAlreadyExists() {
+        return [
+            'With extension' => [
+                'Filename' => 'test.txt',
+                'Expected path' => __DIR__ . '/Fixture/Entity/../../../../temp/uploadable/test-2.txt',
+            ],
+            'Without extension' => [
+                'Filename' => 'test',
+                'Expected path' => __DIR__ . '/Fixture/Entity/../../../../temp/uploadable/test-2',
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider dataProvider_usingAppendNumberOptionAppendsNumberToFilenameIfItAlreadyExists
+     */
+    public function test_moveFile_usingAppendNumberOptionAppendsNumberToFilenameIfItAlreadyExists(string $filename, string $expectedPath)
     {
         $file = new FileAppendNumber();
         $file2 = new FileAppendNumber();
@@ -439,7 +455,7 @@ class UploadableEntityTest extends BaseTestCaseORM
         $file->setTitle('test');
         $file2->setTitle('test2');
 
-        $fileInfo = $this->generateUploadedFile();
+        $fileInfo = $this->generateUploadedFile('image', __DIR__ . '/../../data/' . $filename, $filename);
 
         $this->listener->addEntityFileInfo($file, $fileInfo);
 
@@ -453,9 +469,7 @@ class UploadableEntityTest extends BaseTestCaseORM
 
         $this->em->refresh($file2);
 
-        $filename = substr($file2->getFilePath(), strrpos($file2->getFilePath(), '/') + 1);
-
-        $this->assertEquals('test-2.txt', $filename);
+        $this->assertEquals($expectedPath, $file2->getFilePath());
     }
 
     public function test_moveFile_usingAppendNumberOptionAppendsNumberToFilenameIfItAlreadyExistsRelativePath()
